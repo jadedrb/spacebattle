@@ -1,12 +1,14 @@
 // six alien ships
 // prompt('Attack?', 'Press OK to attack or Cancel to retreat')
-
 class Spaceship {
   constructor (name, hitPoints, damage, accuracy) {
     this.name = name;
     this.hull = hitPoints;
     this.firepower = damage;
     this.accuracy = accuracy;
+    this.railgun = 0;
+    this.missile = 0;
+    this.shields = 0;
     this.points = 0;
     this.flights = 0;
   }
@@ -20,6 +22,9 @@ class Spaceship {
   }
 }
 
+let playerHull = 20;
+let alienWaves = 6;
+
 const randomNum = (min, max) => {
   return Math.floor(Math.random() * (max - min) + min);
 }
@@ -29,7 +34,7 @@ let player;
 let alienFleet = [];
 
 const createAlienFleet = () => {
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < alienWaves; i++) {
     let alienShip = new Spaceship('Alien Ship', randomNum(3,7), randomNum(2,5), randomNum(6,9) / 10)
     alienFleet.push(alienShip)
   }
@@ -41,18 +46,46 @@ let nameMyShip = prompt('What is the name of your spaceship?', 'USS Schwarzenegg
 alert('Game is ready. Begin?')
 
 if (!nameMyShip) {
-  player = new Spaceship('USS Schwarzenegger', 20, 5, .7);
+  player = new Spaceship('USS Schwarzenegger', playerHull, 5, .7);
 } else {
-  player = new Spaceship(nameMyShip, 20, 5, .7);
+  player = new Spaceship(nameMyShip, playerHull, 5, .7);
 }
 
 const freshStart = () => {
+  alienWaves++;
   player.flights++;
   alienFleet = [];
   createAlienFleet();
   player.hull = 20;
-  let restartGame = prompt(`New game. Play again? \n [${player.points} Total Points] \n [Flights: ${player.flights}]`, 'Press OK to play again or Cancel to end game')
+  let restartGame = prompt(`New game. Play again? (Now with ${alienWaves} alien ships)\n [${player.points} Total Points] \n [Flights: ${player.flights}]`, 'Press OK to play again or Cancel to end game')
   if (restartGame != null) {
+    let shopChoice = prompt(`You have ${player.points}pts. You can spend them below. \n \n${player.name} - \n${player.hull} hull(s), ${player.railgun} railgun(s), ${player.missile} missile(s), and ${player.shields} shield(s) \n \nPrices - \nHull Upgrade: 200pts, Railgun: 150pts, Missile: 100pts, Shields: 80pts`, 'Type purchases here (ex: missile missile hull railgun shields shields)')
+    let typedPurchases;
+    shopChoice != null ? typedPurchases = shopChoice.split(' ') : typedPurchases = [] // If they pressed OK or Cancel (null)
+    typedPurchases[0] == 'Type' ? typedPurchases = [] : undefined // If they pressed OK but entered no text ('Type' would be the first index)
+    while (typedPurchases.length > 0) { // Check each string typed in purchase area
+
+      if (typedPurchases[0] == 'hull' && player.points >= 200) {
+        player.points -= 200
+        playerHull += 5;
+      }
+      if (typedPurchases[0] == 'railgun' && player.points >= 150) {
+        player.points -= 150
+        player.railgun += 1;
+      }
+      if (typedPurchases[0] == 'missile' && player.points >= 100) {
+        player.points -= 100
+        player.missile += 1;
+      }
+      if (typedPurchases[0] == 'shields' && player.points >= 80) {
+        player.points -= 80
+        player.shields += 1;
+      }
+      typedPurchases.shift()
+
+    }
+
+
     console.log('..................')
     console.log('..................')
     console.log('..................')
@@ -61,6 +94,7 @@ const freshStart = () => {
     console.log('..................')
     console.log('N E W  G A M E')
     gameStart(player);
+
   }
 }
 
@@ -68,11 +102,11 @@ const tallyPoints = (victory) => {
   let pointTotal = 0;
   if (victory) {
     if (player.hull >= 20) {
-      player.points += 20
-      pointTotal += 20
+      player.points += 50
+      pointTotal += 50
     }
-      player.points += player.hull * 5
-      pointTotal += player.hull * 5
+      player.points += player.hull * 10
+      pointTotal += player.hull * 10
   } else {
     player.points += (player.hull * 2) - (alienFleet.length * 3)
     pointTotal += (player.hull * 2) - (alienFleet.length * 3)
@@ -101,8 +135,8 @@ const destroyShip = (destroyed) => {
       freshStart();
     }
   } else {
-    alert(`The ${player.name} has blown into stardust. The alien forces advance on Earth. You lose!`)
-    freshStart();
+    alert(`The ${player.name} has been blown to smithereens. \n The alien forces advance on Earth. \n You lose!`)
+    // freshStart();
   }
 }
 
@@ -114,26 +148,37 @@ const hullsRemaining = (integrity) => {
     switchAttacker = player
   }
   if (integrity.hull > 0) {
-    if (integrity.hull > 1) {
+    if (integrity.hull > 1) { // if more than 1, say "hulls"
       console.log(`The %c${integrity.name} %chas %c${integrity.hull} %chulls remaining.`, 'color: maroon;', 'color: black;', 'color: grey', 'color: black;')
-    } else {
+    } else { // if not, keep singular
       console.log(`The %c${integrity.name} %chas %c${integrity.hull} %chull remaining.`, 'color: maroon;', 'color: black;', 'color: grey', 'color: black;')
     }
     anotherPause(gameStart, switchAttacker)
-  } else {
-    console.log(`The %c${integrity.name} %chas been %cDESTROYED!!!`, 'color: maroon;', 'color: black;', 'color: orange')
-    anotherPause(destroyShip, integrity)
+  } else { /// if the ship is about to die, check for shields
+    if (player.shields > 0 && integrity.name != 'Alien Ship') {
+      player.shields--
+      console.log(`The %c${integrity.name} %ctriggers its %cEMERGENCY SHIELDS...`, 'color: green;', 'color: black;', 'color: blue')
+      anotherPause(gameStart, switchAttacker)
+    } else { /// if no shields, destroy
+      console.log(`The %c${integrity.name} %chas been %cDESTROYED!!!`, 'color: maroon;', 'color: black;', 'color: orange')
+      anotherPause(destroyShip, integrity)
+    }
   }
 }
 
+// console.log(`The %c${integrity.name} %chas been %cDESTROYED!!!`, 'color: maroon;', 'color: black;', 'color: orange')
+
 const isAttacking = (attacker) => {
   let victim;
+  let missile;
+  let chanceOfMissile = Math.floor(Math.random() * 10)
   if (attacker == player.name) {
     victim = alienFleet[0]
     if (player.attack(alienFleet[0])) {
       console.log(`%c${player.name} %chit the %cAlien Ship!`, 'color: green;', 'color: black;', 'color: maroon')
     } else {
       console.log(`%c${player.name} %cmissed the target...`, 'color: green;', 'color: black;')
+      missile = true;
     }
   } else {
     victim = player
@@ -143,15 +188,48 @@ const isAttacking = (attacker) => {
       console.log(`%cAlien Ship %cmissed the target...`, 'color: red;', 'color: black;')
     }
   }
-  anotherPause(hullsRemaining, victim)
+  if (missile == true && chanceOfMissile <= 3 && player.missile > 0) {
+    anotherPause(fireMissile, victim)
+  } else {
+    anotherPause(hullsRemaining, victim)
+  }
+}
+
+const fireMissile = (param) => {
+  player.missile--
+  console.log(`But it %clocked%c on with a %cmissile %cand blew it up %cinstantly!`, 'color: orange; border: 1px solid orange;', 'color: black;', 'color: orange;', 'color: black;')
+  anotherPause(destroyShip, param)
+}
+
+const railGun = (param) => {
+  console.log(`You begin with a %cpreemptive strike %cfiring your %cRail Gun...`, 'color: grey;', 'color: black;', 'color: skyblue')
+  anotherPause(howMany, param)
+}
+
+const howMany = (param) => {
+  let damageDone = Math.floor((Math.random() * 3) + 1)
+  console.log(`It nails %c${damageDone} %calien ships %cburning %cthem to a crisp...`, 'color: blue;', 'color: black;', 'color: brown;', 'color: skyblue;')
+  while (damageDone > 0 && alienFleet.length > 1) {
+    damageDone--
+    damageDone > 0 ? alienFleet.pop() : undefined;
+  }
+  player.railgun--
+  anotherPause(destroyShip, alienFleet[0])
+  //// currently here... add a anotherPause
 }
 
 const gameStart = (attacker) => {
+  let chanceAtRail = Math.floor(Math.random() * 10)
   console.log(`%c${attacker.name} is attacking...`, 'background: azure;')
-  anotherPause(isAttacking, attacker.name)
+  if (attacker.railgun > 0 && chanceAtRail < 3 && alienFleet.length > 1)  {
+    anotherPause(railGun, attacker)
+  } else {
+    anotherPause(isAttacking, attacker.name)
+  }
 }
 
 const anotherPause = (nextFunc, currentShip) => {
+  // if (player.hull > 10) { player.hull = 1}
   setTimeout(() => {
     nextFunc(currentShip);
   }, 1300)
