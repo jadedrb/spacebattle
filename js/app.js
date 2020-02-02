@@ -80,14 +80,13 @@ const freshStart = () => {
   player.flights++;
   alienFleet = [];
   createAlienFleet();
-  player.hull = 20;
   let restartGame = prompt(`New wave. Keep playing? (Now with ${alienWaves} alien ships)\n [${player.points} Total Points] \n [Flights: ${player.flights}]`, `Adjust game speed here (ex: '1300'))`)
   if (restartGame != null && restartGame.length <= 4) { // change game speed
     gameSpeed = parseInt(restartGame) // make sure game speed is a number
     console.log(`--Game speed changed to ${gameSpeed}.`)
   }
   if (restartGame != null) {
-    let shopChoice = prompt(`You have ${player.points}pts. You can spend them below. \n \n${player.name} - \n${player.hull} hull(s), ${player.fuel} fuel, ${player.railgun} railgun(s), ${player.missile} missile(s), and ${player.shields} shield(s) \n \nPrices - \nHull Upgrade: 200pts, Railgun: 150pts, Missile: 100pts, Shields: 80pts, Fuel: 50pts`, 'Type purchases here (ex: missile missile hull railgun shields shields)')
+    let shopChoice = prompt(`You have ${player.points}pts. You can spend them below. \n \n${player.name} - \n${playerHull} hull(s), ${player.fuel} fuel, ${player.railgun} railgun(s), ${player.missile} missile(s), and ${player.shields} shield(s) \n \nPrices - \nHull Upgrade: 200pts, Railgun: 150pts, Missile: 100pts, Shields: 80pts, Fuel: 50pts`, 'Type purchases here (ex: missile missile hull railgun shields shields)')
     let typedPurchases;
     shopChoice != null ? typedPurchases = shopChoice.split(' ') : typedPurchases = [] // If they pressed OK or Cancel (null)
     typedPurchases[0] == 'Type' ? typedPurchases = [] : undefined // If they pressed OK but entered no text ('Type' would be the first index)
@@ -122,7 +121,7 @@ const freshStart = () => {
 
     }
 
-
+    player.hull = playerHull;
     console.log('..................')
     console.log('..................')
     console.log('..................')
@@ -155,28 +154,24 @@ const destroyShip = (destroyed) => {
   if (destroyed.name == 'Alien Ship') {
     alienFleet.shift();
     if (alienFleet.length > 0) {
-      let isOrAre = 'are';
-      if (alienFleet.length == 1) {
-        isOrAre = 'is'
-      }
-      let decision = prompt(`You destroyed an alien ship. There ${isOrAre} ${alienFleet.length} remaining. \n Resume your assault? [Hulls: ${player.hull}] [Fuel: ${player.fuel}]`, 'Press OK to resume or Cancel to retreat (requires 1 fuel)')
+      let decision = prompt(`You destroyed an alien ship. There ${alienFleet.length == 1 ? 'is' : 'are'} ${alienFleet.length} remaining. \n Resume your assault? [Hulls: ${player.hull}] [Fuel: ${player.fuel}]`, 'Press OK to resume or Cancel to retreat (requires 1 fuel)')
       if (decision == null && player.fuel > 0) {
         player.fuel--;
         alert(`Retreating. You live to fight another day. [+${tallyPoints(0)} Points]`)
         freshStart();
       } else if (decision == null) {
-        console.log('%cYou try to retreat, but your fuel is as low and your morale. You continue the assault unwilling.', 'border: 1px solid grey;')
-        gameStart(player)
+        console.log('%cYour fuel is as low as your morale. You continue the assault unwilling.', 'border: 1px solid grey;')
+        gameStart(player, 'railgun')
       } else {
         console.log('%cYou continue your assault:', 'border: 1px solid grey;')
-        gameStart(player)
+        gameStart(player, 'railgun')
       }
     } else {
       alert(`Alien threat eliminated. Victory! [+${tallyPoints(1)} Points]`)
       freshStart();
     }
   } else {
-    alert(`The ${player.name} has been blown to smithereens. \n The alien forces advance on Earth. \n\nYou lose!`)
+    alert(`The ${player.name} has been blown to smithereens. \nThe alien forces advance on Earth. \n\nYou lose!`)
     showStatline();
   }
 }
@@ -238,7 +233,7 @@ const isAttacking = (attacker) => {
   } else {
     victim = player
     if (alienFleet[0].attack(player)) {
-      console.log(`%cAlien Ship %chit %c${player.name}!`, 'color: red;', 'color: black;', 'color: maroon')
+      console.log(`%cAlien Ship %chit %c${player.name}! %c[-${alienFleet[0].firepower}]`, 'color: red;', 'color: black;', 'color: maroon', 'color: grey')
     } else {
       console.log(`%cAlien Ship %cmissed the target...`, 'color: red;', 'color: black;')
     }
@@ -262,10 +257,10 @@ const railGun = (param) => {
 }
 
 const howMany = (param) => { // as in how many alien ships does the rail gun hit
-  let damageDone = Math.floor((Math.random() * 3) + 1)
-  console.log(`It nails %c${damageDone} %calien ships %cburning %cthem to a crisp...`, 'color: blue;', 'color: black;', 'color: brown;', 'color: skyblue;')
+  let damageDone = Math.floor((Math.random() * 5) + 1)
+  console.log(`It nails %c${alienFleet.length < damageDone ? 'all remaining' : damageDone} %calien ships %cburning them to a crisp...`, 'color: blue;', 'color: black;', 'color: skyblue;')
   player.kills += damageDone;
-  while (damageDone > 0 && alienFleet.length > 1) {
+  while (damageDone > 0 && alienFleet.length > 0) {
     damageDone--
     damageDone > 0 ? alienFleet.pop() : undefined;
   }
@@ -273,10 +268,10 @@ const howMany = (param) => { // as in how many alien ships does the rail gun hit
   anotherPause(destroyShip, alienFleet[0])
 }
 
-const gameStart = (attacker) => {
+const gameStart = (attacker, string) => {
   let chanceAtRail = Math.floor(Math.random() * 10)
   console.log(`%c${attacker.name} is attacking...`, 'background: azure;')
-  if (attacker.railgun > 0 && chanceAtRail < 3 && alienFleet.length > 1)  {
+  if (attacker.railgun > 0 && chanceAtRail < 2 && alienFleet.length > 1 && string == 'railgun')  {
     anotherPause(railGun, attacker)
   } else {
     anotherPause(isAttacking, attacker.name)
