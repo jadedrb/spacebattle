@@ -57,6 +57,7 @@ const newShip = () => { /// Starts the game. Also introduces new player ships wh
   totalPointsEarned = 0;
   alienFleet = [];
   alienWaves = 6;
+  playerHull = 20;
   createAlienFleet();
   console.log('..................')
   console.log('..................')
@@ -81,7 +82,7 @@ const freshStart = () => {
   createAlienFleet();
   player.hull = 20;
   let restartGame = prompt(`New wave. Keep playing? (Now with ${alienWaves} alien ships)\n [${player.points} Total Points] \n [Flights: ${player.flights}]`, `Adjust game speed here (ex: '1300'))`)
-  if (restartGame != null && restartGame.length < 4) { // change game speed
+  if (restartGame != null && restartGame.length <= 4) { // change game speed
     gameSpeed = parseInt(restartGame) // make sure game speed is a number
     console.log(`--Game speed changed to ${gameSpeed}.`)
   }
@@ -93,22 +94,27 @@ const freshStart = () => {
     while (typedPurchases.length > 0) { // Check each string typed in purchase area
 
       if (typedPurchases[0] == 'hull' && player.points >= 200) {
+        console.log(`--Hull upgrade purchased.`)
         player.points -= 200
         playerHull += 5;
       }
       if (typedPurchases[0] == 'railgun' && player.points >= 150) {
+        console.log(`--Railgun round purchased.`)
         player.points -= 150
         player.railgun += 1;
       }
       if (typedPurchases[0] == 'missile' && player.points >= 100) {
+        console.log(`--Missile purchased.`)
         player.points -= 100
         player.missile += 1;
       }
       if (typedPurchases[0] == 'shields' && player.points >= 80) {
+        console.log(`--Shields purchased.`)
         player.points -= 80
         player.shields += 1;
       }
       if (typedPurchases[0] == 'fuel' && player.points >= 50) {
+        console.log(`--Fuel purchased.`)
         player.points -= 50
         player.fuel += 1;
       }
@@ -134,19 +140,15 @@ const freshStart = () => {
 const tallyPoints = (victory) => {
   let pointTotal = 0;
   if (victory) {
-    if (player.hull >= 20) {
-      player.points += 50
-      pointTotal += 50
-    }
-      player.points += player.hull * 10
-      pointTotal += player.hull * 10
+    // More hits taken = greater risk = greater reward
+    pointTotal = (5 * alienWaves) + ((playerHull - player.hull) * 5);
   } else {
-    player.points += (player.hull * 2) - (alienFleet.length * 3)
-    pointTotal += (player.hull * 2) - (alienFleet.length * 3)
-    pointTotal < 5 ? pointTotal = 5 : undefined
+    // If you retreat, you get significantly less
+    pointTotal = (playerHull - player.hull) * 3
   }
+  player.points += pointTotal
   totalPointsEarned += pointTotal
-  return pointTotal;
+  return pointTotal
 }
 
 const destroyShip = (destroyed) => {
@@ -210,6 +212,7 @@ const hullsRemaining = (integrity) => {
   } else { /// if the ship is about to die, check for shields
     if (player.shields > 0 && integrity.name != 'Alien Ship') {
       player.shields--
+      player.hull = 1;
       console.log(`The %c${integrity.name} %ctriggers its %cEMERGENCY SHIELDS...`, 'color: green;', 'color: black;', 'color: blue')
       anotherPause(gameStart, switchAttacker)
     } else { /// if no shields, destroy
@@ -249,7 +252,7 @@ const isAttacking = (attacker) => {
 
 const fireMissile = (param) => {
   player.missile--
-  console.log(`But it %clocked%c on with a %cmissile %cand blew it up %cinstantly!`, 'color: orange; border: 1px solid orange;', 'color: black;', 'color: orange;', 'color: black;')
+  console.log(`...But it %clocked%c on with a %cmissile. %cBOOM!!!`, 'color: orange; border: 1px solid orange;', 'color: black;', 'color: grey;', 'color: orange;')
   anotherPause(destroyShip, param)
 }
 
