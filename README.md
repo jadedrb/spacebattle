@@ -9,7 +9,7 @@ Fight off waves of alien ships in this high-octane and risk-taking console game.
 
 This was my first project while attending Per Scholas. Survive infinite waves of alien ships. Earn points and buy upgrades for your souped-up spaceship. Fuel management. Rail guns. Need I say more?
 
-How to play: 
+## How To Play
 
 - Open up your console. Shortcuts: **Command** + **Option** + **J** on Mac, **Command** + **Shift** + **J** on Windows.
 - Otherwise, you can right click your browser, choose Inspect, and click the Console tab.
@@ -26,4 +26,4 @@ How to play:
 
 ## Deployed Link 
 
-http://psychedelic-coast.surge.sh/
+ Check out [Space Battle](http://psychedelic-coast.surge.sh/)!
