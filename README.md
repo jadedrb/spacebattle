@@ -7,7 +7,7 @@ Fight off waves of alien ships in this high-octane and risk-taking console game.
 
 ## Description
 
-This was my first project while attending Per Scholas. Open up your console (Command + Option + J) and experience a console game like no other. Survive infinite waves of alien ships. Earn points and buy upgrades for your souped-up spaceship. Fuel management. Rail guns. Need I say more?
+This was my first project while attending Per Scholas. Survive infinite waves of alien ships. Earn points and buy upgrades for your souped-up spaceship. Fuel management. Rail guns. Need I say more?
 
 ## Built With
 
